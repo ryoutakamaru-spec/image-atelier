@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1324">
+  <meta name="description" content="3×3コラージュを9枚のPNGに分割し、iPhone SE向け画像と写真集PDFを作成する、端末内完結の無料ツール。">
+  <title>Image Atelier｜9分割・写真集ツール</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header class="topbar"><div class="brandmark">◩</div><div class="brandname">IMAGE ATELIER <small>PRIVATE IMAGE WORKFLOW</small></div><span class="toplabel">v1.0</span></header>
+    <div class="intro"><p class="eyebrow">COLLAGE · CROP · PHOTOBOOK</p><h1>9分割から写真集まで、<br><span>ひとつのツールで。</span></h1><p class="lede">3×3コラージュを正確に切り出し、iPhone SE向けの9枚の画像とPDFを一括作成します。すべての画像処理は端末内で完結します。</p></div>
+
+    <main>
+      <section class="panel" aria-labelledby="s1">
+        <div class="step-head"><span class="step-num">01</span><div><h2 id="s1">画像を選択</h2><p>3×3コラージュ画像を指定してください。</p></div></div>
+        <label class="upload-zone" id="dropZone" for="fileInput">
+          <span class="upload-icon">＋</span>
+          <strong>画像を選択する</strong>
+          <span>タップして画像を選択 · PCではドラッグ＆ドロップも対応</span>
+          <span class="subtle">PNG / JPEG / WebP · 40MP以下を推奨</span>
+        </label>
+        <input id="fileInput" type="file" accept="image/png,image/jpeg,image/webp,image/*" aria-label="コラージュ画像を選択">
+        <p id="imageMeta" class="muted"></p>
+      </section>
+
+      <section class="panel" id="adjustPanel" aria-labelledby="s2" hidden>
+        <div class="step-head"><span class="step-num">02</span><div><h2 id="s2">切り出し位置を確認</h2><p>緑の枠が切り出される9つの領域です。</p></div></div>
+        <div class="source-preview"><canvas id="guideCanvas" aria-label="9分割位置のプレビュー"></canvas></div>
+        <details class="adjust-details"><summary>境界線や余白を調整する <span>▾</span></summary>
+          <div class="settings-grid">
+            <label>外周余白（px）<input type="number" id="margin" min="0" max="500" step="1" value="0"></label>
+            <label>縦の隙間（px）<input type="number" id="gapX" min="0" max="500" step="1" value="0"></label>
+            <label>横の隙間（px）<input type="number" id="gapY" min="0" max="500" step="1" value="0"></label>
+            <label>左の縦境界（%）<input type="number" id="x1" min="1" max="99" step="0.1" value="33.3"></label>
+            <label>右の縦境界（%）<input type="number" id="x2" min="1" max="99" step="0.1" value="66.7"></label>
+            <label>上の横境界（%）<input type="number" id="y1" min="1" max="99" step="0.1" value="33.3"></label>
+            <label>下の横境界（%）<input type="number" id="y2" min="1" max="99" step="0.1" value="66.7"></label>
+          </div>
+          <p class="hint">隙間がない画像なら、すべて初期値のままで構いません。各境界は画像全体ではなく「外周余白を除いた範囲」の割合です。</p>
+          <button id="resetButton" class="secondary small" type="button">切り出し位置を初期化</button>
+        </details>
+      </section>
+
+      <section class="panel" id="tilesPanel" aria-labelledby="s3" hidden>
+        <div class="step-head"><span class="step-num">03</span><div><h2 id="s3">9枚のプレビュー</h2><p>左上から右下へ、01〜09の順に保存します。</p></div></div>
+        <div class="tiles" id="tiles"></div>
+      </section>
+
+      <section class="panel" id="outputPanel" aria-labelledby="s4" hidden>
+        <div class="step-head"><span class="step-num">04</span><div><h2 id="s4">書き出し</h2><p>元の切り抜きとスマホ用画像、PDFをまとめて出力します。</p></div></div>
+        <div class="settings-grid compact">
+          <label>ファイル名（英数字）<input type="text" id="prefix" maxlength="35" value="scene" autocomplete="off" spellcheck="false"></label>
+          <label>画面への収め方
+            <select id="fitMode"><option value="contain">全体を表示（余白あり）</option><option value="cover">画面いっぱい（端が切れる）</option></select>
+          </label>
+          <label>余白の色
+            <select id="background"><option value="#000000">黒</option><option value="#ffffff">白</option></select>
+          </label>
+        </div>
+        <div class="output-info"><span>元画像を切り抜いた PNG × 9</span><span>750 × 1334px PNG × 9</span><span>1ページ1枚・9ページ PDF × 1</span><span>切り出し座標の記録 CSV × 1</span></div>
+        <button id="exportButton" class="primary" type="button">ZIP＋写真集PDFを作成</button>
+        <progress id="progress" max="9" value="0" hidden></progress>
+        <p id="status" class="status" role="status" aria-live="polite">画像を選ぶと書き出せます。</p>
+        <a id="downloadLink" class="download" hidden>完成したZIPを保存</a>
+        <a id="pdfLink" class="download secondary-download" hidden>PDFのみを保存</a>
+        <p class="hint">※ 外部通信・画像送信は行いません。ダウンロード処理はSafariの「ファイル」などで保存してください。大きな画像では端末のメモリ使用量が増えます。</p>
+      </section>
+    </main>
+    <footer><strong>IMAGE ATELIER</strong><span>画像は端末内で処理 · AI再描画なし · 外部ライブラリなし</span></footer>
+  </div>
+  <script src="app.js" defer></script>
+</body>
+</html>
